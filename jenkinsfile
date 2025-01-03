@@ -1,17 +1,25 @@
 pipeline {
     agent any
     stages {
-        stage('Send Slack Notification') {
+        stage('Build') {
             steps {
-                script {
-                    sh '''
-                    curl -X POST -H 'Content-type: application/json' \
-                    --data '{"text":"Pipeline completed successfully"}' \
-                    https://hooks.slack.com/services/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
-                    '''
-                }
+                echo 'Building the project...'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
             }
         }
     }
+    post {
+        always {
+            slackSend(
+                channel: '#general',
+                color: 'good', // 'good' for green, 'danger' for red, or any hex color
+                message: "Pipeline '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}) completed.",
+                tokenCredentialId: 'slack-token-id' // Replace with your Slack token credential ID
+            )
+        }
+    }
 }
-

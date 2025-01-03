@@ -14,43 +14,42 @@ pipeline {
         }
     }
 
-   post {
-    success {
-        echo 'Build succeeded!'
+    post {
+        success {
+            echo 'Build succeeded!'
 
-        // Create a Jira issue
-        jiraIssue(
-            site: 'https://your-jira-instance.atlassian.net/',
-            projectKey: 'SMS-7',
-            issueType: 'Task',
-            summary: 'Build Succeeded for Job ${env.JOB_NAME}',
-            description: 'The Jenkins build ${env.BUILD_NUMBER} succeeded!'
-        )
+            // Create a Jira issue using the correct method
+            jiraCreateIssue(
+                site: 'https://darshangk11-1735925303258.atlassian.net/', // Replace with your Jira instance name
+                projectKey: 'SMS-7', // Replace with your Jira project key
+                issueType: 'Task',
+                summary: 'Build Succeeded for Job ${env.JOB_NAME}',
+                description: 'The Jenkins build ${env.BUILD_NUMBER} succeeded!'
+            )
 
-        slackSend(
-            channel: '#general',
-            message: 'Build succeeded and Jira issue created! 🎉',
-            color: 'good',
-            tokenCredentialId: 'slack-token-id'
-        )
+            slackSend(
+                channel: '#general',
+                message: 'Build succeeded and Jira issue created! 🎉',
+                color: 'good',
+                tokenCredentialId: 'slack-token-id'
+            )
+        }
+        failure {
+            echo 'Build failed!'
+
+            // Transition a Jira issue to a specific state (e.g., "In Progress")
+            jiraTransitionIssue(
+                site: 'https://darshangk11-1735925303258.atlassian.net/', // Replace with your Jira instance name
+                idOrKey: 'SMS-7', // Replace with your Jira issue ID or key
+                transitionName: 'In Progress'
+            )
+
+            slackSend(
+                channel: '#general',
+                message: 'Build failed, Jira issue updated! 💔',
+                color: 'danger',
+                tokenCredentialId: 'slack-token-id'
+            )
+        }
     }
-    failure {
-        echo 'Build failed!'
-
-        // Transition a Jira issue to a specific state (e.g., "In Progress")
-        jiraTransitionIssue(
-            site: 'https://your-jira-instance.atlassian.net/',
-            idOrKey: 'SMS-7',
-            transitionName: 'In Progress'
-        )
-
-        slackSend(
-            channel: '#general',
-            message: 'Build failed, Jira issue updated! 💔',
-            color: 'danger',
-            tokenCredentialId: 'slack-token-id'
-        )
-    }
-}
-
 }

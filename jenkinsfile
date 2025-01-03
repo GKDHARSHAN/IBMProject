@@ -1,55 +1,49 @@
 pipeline {
     agent any
-
+    environment {
+        SLACK_CHANNEL = '#general'  // Specify your Slack channel
+        SLACK_COLOR = 'good'        // Green color for success, red for failure
+    }
     stages {
         stage('Build') {
             steps {
-                echo 'Building...'
+                script {
+                    echo 'Building the project...'
+                    // Add build steps here
+                }
             }
         }
         stage('Test') {
             steps {
-                echo 'Testing...'
+                script {
+                    echo 'Running tests...'
+                    // Add test steps here
+                }
             }
         }
     }
-
     post {
         success {
-            echo 'Build succeeded!'
-
-            // Create a Jira issue using the correct method
-            jiraCreateIssue(
-                site: 'https://darshangk11-1735925303258.atlassian.net/', // Replace with your Jira instance name
-                projectKey: 'SMS-7', // Replace with your Jira project key
-                issueType: 'Task',
-                summary: 'Build Succeeded for Job ${env.JOB_NAME}',
-                description: 'The Jenkins build ${env.BUILD_NUMBER} succeeded!'
-            )
-
-            slackSend(
-                channel: '#general',
-                message: 'Build succeeded and Jira issue created! 🎉',
-                color: 'good',
-                tokenCredentialId: 'slack-token-id'
-            )
+            script {
+                slackSend (
+                    channel: SLACK_CHANNEL, 
+                    color: 'good', 
+                    message: "Build successful! :white_check_mark:",
+                    username: 'jenkins',
+                    iconEmoji: ':tada:'
+                )
+            }
         }
         failure {
-            echo 'Build failed!'
-
-            // Transition a Jira issue to a specific state (e.g., "In Progress")
-            jiraTransitionIssue(
-                site: 'https://darshangk11-1735925303258.atlassian.net/', // Replace with your Jira instance name
-                idOrKey: 'SMS-7', // Replace with your Jira issue ID or key
-                transitionName: 'In Progress'
-            )
-
-            slackSend(
-                channel: '#general',
-                message: 'Build failed, Jira issue updated! 💔',
-                color: 'danger',
-                tokenCredentialId: 'slack-token-id'
-            )
+            script {
+                slackSend (
+                    channel: SLACK_CHANNEL, 
+                    color: 'danger', 
+                    message: "Build failed! :x:",
+                    username: 'jenkins',
+                    iconEmoji: ':no_entry_sign:'
+                )
+            }
         }
     }
 }

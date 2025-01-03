@@ -19,7 +19,6 @@ pipeline {
                 color: 'good', 
                 message: "Build Successfull!",
                 tokenCredentialId: 'slack-token-id',
-                baseUrl:'https://slack.com/api/chat.postMessage'
             )
         }
     }

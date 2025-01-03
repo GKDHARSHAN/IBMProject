@@ -7,7 +7,7 @@ pipeline {
                     sh '''
                     curl -X POST -H 'Content-type: application/json' \
                     --data '{"text":"Pipeline completed successfully"}' \
-                    https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+                    https://hooks.slack.com/services/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
                     '''
                 }
             }

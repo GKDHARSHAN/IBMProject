@@ -16,9 +16,10 @@ pipeline {
         always {
             slackSend(
                 channel: '#general',
-                color: 'good', // 'good' for green, 'danger' for red, or any hex color
-                message: "Pipeline '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}) completed.",
-                tokenCredentialId: 'slack-token-id' // Replace with your Slack token credential ID
+                color: 'good', 
+                message: "Build Successfull!",
+                tokenCredentialId: 'slack-token-id',
+                baseurl:'https://slack.com/api/chat.postMessage'
             )
         }
     }

@@ -1,24 +1,54 @@
 pipeline {
     agent any
+
     stages {
         stage('Build') {
             steps {
-                echo 'Building the project...'
+                echo 'Building...'
             }
         }
         stage('Test') {
             steps {
-                echo 'Running tests...'
+                echo 'Testing...'
             }
         }
     }
+
     post {
-        always {
+        success {
+            echo 'Build succeeded!'
+
+            // Create a Jira issue
+            jiraNewIssue(
+                site: 'https://darshangk11-1735925303258.atlassian.net/', // Replace with your Jira instance name
+                projectKey: 'SMS-7', // Replace with your Jira project key
+                issueType: 'Task',
+                summary: 'Build Succeeded for Job ${env.JOB_NAME}',
+                description: 'The Jenkins build ${env.BUILD_NUMBER} succeeded!'
+            )
+
             slackSend(
                 channel: '#general',
-                color: 'good', 
-                message: "Build Successfull!",
-                tokenCredentialId: 'slack-token-id',
+                message: 'Build succeeded and Jira issue created! 🎉',
+                color: 'good',
+                tokenCredentialId: 'slack-token-id'
+            )
+        }
+        failure {
+            echo 'Build failed!'
+
+            // Transition a Jira issue to a specific state (e.g., "In Progress")
+            jiraTransitionIssue(
+                site: 'https://darshangk11-1735925303258.atlassian.net/', // Replace with your Jira instance name
+                idOrKey: 'SMS-7', // Replace with your Jira issue ID or key
+                transitionName: 'In Progress'
+            )
+
+            slackSend(
+                channel: '#general',
+                message: 'Build failed, Jira issue updated! 💔',
+                color: 'danger',
+                tokenCredentialId: 'slack-token-id'
             )
         }
     }

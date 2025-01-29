@@ -1,14 +1,15 @@
 pipeline {
     agent any
     environment {
-        SLACK_CHANNEL = '#general'  // Specify your Slack channel
-        SLACK_COLOR = 'good'        // Green color for success, red for failure
+        SLACK_CHANNEL = '#general'  
+        SLACK_COLOR = 'good'        
     }
     stages {
         stage('Build') {
             steps {
                 script {
                     echo 'Building the project...'
+                    error 'Build failed intentionally!'
                     // Add build steps here
                 }
             }

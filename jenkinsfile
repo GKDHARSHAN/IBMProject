@@ -9,7 +9,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building the project...'
-                    ##error 'Build failed intentionally!'
+                    //error 'Build failed intentionally!'
                     // Add build steps here
                 }
             }

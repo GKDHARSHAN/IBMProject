@@ -5,7 +5,7 @@ pipeline {
         SLACK_COLOR_SUCCESS = 'good'        
         SLACK_COLOR_FAILURE = 'danger'
         JIRA_SITE = 'jenkins-jira'  // Your Jira site configured in Jenkins
-        JIRA_ISSUE = sh(script: 'echo ${GIT_BRANCH} | grep -o "SMS-[0-9]\+"', returnStdout: true).trim()
+        JIRA_ISSUE = sh(script: 'echo ${GIT_BRANCH} | grep -o "SMS-[0-9]\\+"', returnStdout: true).trim()
     }
     stages {
         stage('Build') {

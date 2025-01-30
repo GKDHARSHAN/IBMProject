@@ -4,6 +4,7 @@ pipeline {
         SLACK_CHANNEL = '#general'  
         SLACK_COLOR_SUCCESS = 'good'        
         SLACK_COLOR_FAILURE = 'danger'
+        JIRA_SITE = 'jenkins-jira'
         JIRA_ISSUE = 'SMS-7' // Replace with the actual Jira issue ID
     } 
     stages {

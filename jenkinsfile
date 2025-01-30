@@ -43,13 +43,6 @@ pipeline {
                     issueKey: "${JIRA_ISSUE}", 
                     body: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
                     )
-                }
-                script {
-                    jiraTransitionIssue(
-                        site: "${JIRA_SITE}", 
-                        issueKey: "${JIRA_ISSUE}", 
-                        transition: "Done"  // Change status to "Done"
-                    )
                 }                
             }
         }

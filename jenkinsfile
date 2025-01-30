@@ -42,6 +42,10 @@ pipeline {
                     issueKey: "${JIRA_ISSUE}", 
                     body: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
                     )
+               jiraTransitionIssue (
+                    issueKey: "${JIRA_ISSUE}", // The Jira Issue Key
+                    transition: "Done"  // You can define different transitions based on the build result (e.g., Done, Reopen, etc.)
+                    )
                 }                
             }
         }

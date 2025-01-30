@@ -5,7 +5,7 @@ pipeline {
         SLACK_COLOR_SUCCESS = 'good'        
         SLACK_COLOR_FAILURE = 'danger'
         JIRA_SITE = 'jenkins-jira'  // Your Jira site configured in Jenkins
-        JIRA_ISSUE = 'SMS-7'        // Replace with the actual Jira issue ID
+        JIRA_ISSUE = sh(script: 'echo ${GIT_BRANCH} | grep -o "SMS-[0-9]\+"', returnStdout: true).trim()
     }
     stages {
         stage('Build') {
@@ -30,48 +30,52 @@ pipeline {
     post {
         success {
             script {
-                slackSend (
-                    channel: SLACK_CHANNEL, 
-                    color: SLACK_COLOR_SUCCESS, 
-                    message: "✅ Build successful! Build ID: ${env.BUILD_NUMBER}",
-                    username: 'jenkins',
-                    iconEmoji: ':tada:'
-                )
+                try {
+                    slackSend (
+                        channel: SLACK_CHANNEL, 
+                        color: SLACK_COLOR_SUCCESS, 
+                        message: "✅ Build successful! Build ID: ${env.BUILD_NUMBER}",
+                        username: 'jenkins',
+                        iconEmoji: ':tada:'
+                    )
 
-                // Add a comment to the Jira issue
-                jiraComment( 
-                    issueKey: JIRA_ISSUE, 
-                    comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
-                )
+                    jiraComment( 
+                        issueKey: JIRA_ISSUE, 
+                        comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
+                    )
 
-                // Transition Jira issue to "Done"
-                jiraTransitionIssue(
-                    issueKey: JIRA_ISSUE, 
-                    transition: "Done"
-                )
+                    jiraTransitionIssue(
+                        issueKey: JIRA_ISSUE, 
+                        transition: "Done"
+                    )
+                } catch (Exception e) {
+                    echo "Failed to send notifications: ${e}"
+                }
             }
         }
         failure {
             script {
-                slackSend (
-                    channel: SLACK_CHANNEL, 
-                    color: SLACK_COLOR_FAILURE, 
-                    message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
-                    username: 'jenkins',
-                    iconEmoji: ':no_entry_sign:'
-                )
+                try {
+                    slackSend (
+                        channel: SLACK_CHANNEL, 
+                        color: SLACK_COLOR_FAILURE, 
+                        message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
+                        username: 'jenkins',
+                        iconEmoji: ':no_entry_sign:'
+                    )
 
-                // Add a comment to the Jira issue in case of failure
-                jiraComment( 
-                    issueKey: JIRA_ISSUE, 
-                    comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
-                )
+                    jiraComment( 
+                        issueKey: JIRA_ISSUE, 
+                        comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
+                    )
 
-                // Transition Jira issue to "Reopen" in case of failure
-                jiraTransitionIssue(
-                    issueKey: JIRA_ISSUE, 
-                    transition: "Reopen"
-                )
+                    jiraTransitionIssue(
+                        issueKey: JIRA_ISSUE, 
+                        transition: "Reopen"
+                    )
+                } catch (Exception e) {
+                    echo "Failed to send notifications: ${e}"
+                }
             }
         }
     }

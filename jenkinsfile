@@ -44,9 +44,7 @@ pipeline {
         body: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
     )
 }
-
-                jiraAddComment(issueKey: JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}")
-                jiraTransitionIssue(issueKey: JIRA_ISSUE, transition: "Done") // Moves issue to "Done"
+                 // Moves issue to "Done"
             }
         }
         failure {

@@ -38,7 +38,7 @@ pipeline {
                     iconEmoji: ':tada:'
                 )
                 script {
-                jiraComment( 
+                jiraaddComment( 
                     issueKey: "${JIRA_ISSUE}", 
                     body: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
                     )

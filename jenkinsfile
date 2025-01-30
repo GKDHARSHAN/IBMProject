@@ -7,13 +7,11 @@ pipeline {
         JIRA_SITE = 'jenkins-jira'
         JIRA_ISSUE = 'SMS-7' // Replace with the actual Jira issue ID
     }
-script {
-    echo "JIRA Issue Key: ${JIRA_ISSUE}"
-}
     stages {
         stage('Build') {
             steps {
                 script {
+                    echo "JIRA Issue Key: ${JIRA_ISSUE}"
                     echo 'Building the project...'
                     // Uncomment below to fail the build intentionally
                     // error 'Build failed intentionally!'

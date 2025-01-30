@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        JIRA_SITE = 'MyJiraSite'  // This matches your JIRA site name configured in Jenkins
+        JIRA_SITE = 'jenkins-jira'  // This matches your JIRA site name configured in Jenkins
         JIRA_ISSUE = 'PROJECT-123'  // Replace with your actual JIRA issue key
     }
     stages {

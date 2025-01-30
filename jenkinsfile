@@ -4,8 +4,8 @@ pipeline {
         SLACK_CHANNEL = '#general'  
         SLACK_COLOR_SUCCESS = 'good'        
         SLACK_COLOR_FAILURE = 'danger'
-        JIRA_SITE = 'jenkins-jira'
-        JIRA_ISSUE = 'SMS-7' // Replace with the actual Jira issue ID
+        JIRA_SITE = 'jenkins-jira'  // Your Jira site configured in Jenkins
+        JIRA_ISSUE = 'SMS-7'        // Replace with the actual Jira issue ID
     }
     stages {
         stage('Build') {
@@ -37,16 +37,20 @@ pipeline {
                     username: 'jenkins',
                     iconEmoji: ':tada:'
                 )
-                script {
-                jiraComment( 
-                    issueKey: "${JIRA_ISSUE}", 
-                    body: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
-                    )
-               jiraTransitionIssue (
-                    issueKey: "${JIRA_ISSUE}", // The Jira Issue Key
-                    transition: "Done"  // You can define different transitions based on the build result (e.g., Done, Reopen, etc.)
-                    )
-                }                
+
+                // Add a comment to the Jira issue
+                jiraComment(
+                    site: JIRA_SITE, 
+                    issueKey: JIRA_ISSUE, 
+                    comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
+                )
+
+                // Transition Jira issue to "Done"
+                jiraTransitionIssue(
+                    site: JIRA_SITE, 
+                    issueKey: JIRA_ISSUE, 
+                    transition: "Done"
+                )
             }
         }
         failure {
@@ -58,8 +62,20 @@ pipeline {
                     username: 'jenkins',
                     iconEmoji: ':no_entry_sign:'
                 )
-                jiraAddComment(issueKey: JIRA_ISSUE, comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}")
-                jiraTransitionIssue(issueKey: JIRA_ISSUE, transition: "Reopen") // Moves issue back to "Reopen"
+
+                // Add a comment to the Jira issue in case of failure
+                jiraComment(
+                    site: JIRA_SITE, 
+                    issueKey: JIRA_ISSUE, 
+                    comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
+                )
+
+                // Transition Jira issue to "Reopen" in case of failure
+                jiraTransitionIssue(
+                    site: JIRA_SITE, 
+                    issueKey: JIRA_ISSUE, 
+                    transition: "Reopen"
+                )
             }
         }
     }

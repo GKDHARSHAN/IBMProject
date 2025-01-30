@@ -39,15 +39,13 @@ pipeline {
                 )
 
                 // Add a comment to the Jira issue
-                jiraComment(
-                    site: JIRA_SITE, 
+                jiraComment( 
                     issueKey: JIRA_ISSUE, 
                     comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
                 )
 
                 // Transition Jira issue to "Done"
                 jiraTransitionIssue(
-                    site: JIRA_SITE, 
                     issueKey: JIRA_ISSUE, 
                     transition: "Done"
                 )
@@ -64,15 +62,13 @@ pipeline {
                 )
 
                 // Add a comment to the Jira issue in case of failure
-                jiraComment(
-                    site: JIRA_SITE, 
+                jiraComment( 
                     issueKey: JIRA_ISSUE, 
                     comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
                 )
 
                 // Transition Jira issue to "Reopen" in case of failure
                 jiraTransitionIssue(
-                    site: JIRA_SITE, 
                     issueKey: JIRA_ISSUE, 
                     transition: "Reopen"
                 )

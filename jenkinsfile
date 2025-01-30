@@ -37,6 +37,14 @@ pipeline {
                     username: 'jenkins',
                     iconEmoji: ':tada:'
                 )
+                script {
+    jiraComment(
+        site: "${JIRA_SITE}", 
+        issueKey: "${JIRA_ISSUE}", 
+        body: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
+    )
+}
+
                 jiraAddComment(issueKey: JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}")
                 jiraTransitionIssue(issueKey: JIRA_ISSUE, transition: "Done") // Moves issue to "Done"
             }

@@ -2,15 +2,17 @@ pipeline {
     agent any
     environment {
         SLACK_CHANNEL = '#general'  
-        SLACK_COLOR = 'good'        
+        SLACK_COLOR_SUCCESS = 'good'        
+        SLACK_COLOR_FAILURE = 'danger'
+        JIRA_ISSUE = 'SMS-7' // Replace with the actual Jira issue ID
     }
     stages {
         stage('Build') {
             steps {
                 script {
                     echo 'Building the project...'
-                    //error 'Build failed intentionally!'
-                    // Add build steps here
+                    // Uncomment below to fail the build intentionally
+                    // error 'Build failed intentionally!'
                 }
             }
         }
@@ -28,22 +30,26 @@ pipeline {
             script {
                 slackSend (
                     channel: SLACK_CHANNEL, 
-                    color: 'good', 
-                    message: "Build successful! :white_check_mark:",
+                    color: SLACK_COLOR_SUCCESS, 
+                    message: "✅ Build successful! Build ID: ${env.BUILD_NUMBER}",
                     username: 'jenkins',
                     iconEmoji: ':tada:'
                 )
+                jiraAddComment(issueKey: JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}")
+                jiraTransitionIssue(issueKey: JIRA_ISSUE, transition: "Done") // Moves issue to "Done"
             }
         }
         failure {
             script {
                 slackSend (
                     channel: SLACK_CHANNEL, 
-                    color: 'danger', 
-                    message: "Build failed! :x:",
+                    color: SLACK_COLOR_FAILURE, 
+                    message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
                     username: 'jenkins',
                     iconEmoji: ':no_entry_sign:'
                 )
+                jiraAddComment(issueKey: JIRA_ISSUE, comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}")
+                jiraTransitionIssue(issueKey: JIRA_ISSUE, transition: "Reopen") // Moves issue back to "Reopen"
             }
         }
     }

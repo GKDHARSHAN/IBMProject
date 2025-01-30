@@ -30,7 +30,6 @@ pipeline {
     post {
         success {
             script {
-                try {
                     slackSend (
                         channel: SLACK_CHANNEL, 
                         color: SLACK_COLOR_SUCCESS, 
@@ -48,9 +47,6 @@ pipeline {
                         issueKey: JIRA_ISSUE, 
                         transition: "Done"
                     )
-                } catch (Exception e) {
-                    echo "Failed to send notifications: ${e}"
-                }
             }
         }
         failure {

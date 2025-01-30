@@ -5,7 +5,7 @@ pipeline {
         SLACK_COLOR_SUCCESS = 'good'        
         SLACK_COLOR_FAILURE = 'danger'
         JIRA_ISSUE = 'SMS-7' // Replace with the actual Jira issue ID
-    }
+    } 
     stages {
         stage('Build') {
             steps {

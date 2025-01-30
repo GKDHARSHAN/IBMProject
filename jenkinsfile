@@ -4,15 +4,23 @@ pipeline {
         SLACK_CHANNEL = '#general'  
         SLACK_COLOR_SUCCESS = 'good'        
         SLACK_COLOR_FAILURE = 'danger'
-        JIRA_SITE = 'jenkins-jira'  // Use your actual Jira site name
-        JIRA_ISSUE = 'SMS-8' // Replace with your Jira issue ID
+        JIRA_ISSUE = 'SMS-7' // Replace with the actual Jira issue ID
     }
     stages {
         stage('Build') {
             steps {
                 script {
                     echo 'Building the project...'
-                    // error 'Build failed intentionally!'  // Uncomment to force failure
+                    // Uncomment below to fail the build intentionally
+                    // error 'Build failed intentionally!'
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                script {
+                    echo 'Running tests...'
+                    // Add test steps here
                 }
             }
         }
@@ -27,16 +35,8 @@ pipeline {
                     username: 'jenkins',
                     iconEmoji: ':tada:'
                 )
-                jiraAddComment(
-                    site: JIRA_SITE, 
-                    issueKey: JIRA_ISSUE, 
-                    comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
-                )
-                jiraTransitionIssue(
-                    site: JIRA_SITE, 
-                    issueKey: JIRA_ISSUE, 
-                    transition: "Done"
-                )
+                jiraAddComment(issueKey: JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}")
+                jiraTransitionIssue(issueKey: JIRA_ISSUE, transition: "Done") // Moves issue to "Done"
             }
         }
         failure {
@@ -48,16 +48,8 @@ pipeline {
                     username: 'jenkins',
                     iconEmoji: ':no_entry_sign:'
                 )
-                jiraAddComment(
-                    site: JIRA_SITE, 
-                    issueKey: JIRA_ISSUE, 
-                    comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
-                )
-                jiraTransitionIssue(
-                    site: JIRA_SITE, 
-                    issueKey: JIRA_ISSUE, 
-                    transition: "Reopen"
-                )
+                jiraAddComment(issueKey: JIRA_ISSUE, comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}")
+                jiraTransitionIssue(issueKey: JIRA_ISSUE, transition: "Reopen") // Moves issue back to "Reopen"
             }
         }
     }

@@ -1,23 +1,18 @@
 pipeline {
     agent any
     environment {
-        JIRA_SITE = 'jenkins-jira'  // This matches your JIRA site name configured in Jenkins
-        JIRA_ISSUE = 'PROJECT-123'  // Replace with your actual JIRA issue key
+        SLACK_CHANNEL = '#general'  
+        SLACK_COLOR_SUCCESS = 'good'        
+        SLACK_COLOR_FAILURE = 'danger'
+        JIRA_SITE = 'jenkins-jira'  // Use your actual Jira site name
+        JIRA_ISSUE = 'SMS-7' // Replace with your Jira issue ID
     }
     stages {
-        stage('Build') { 
+        stage('Build') {
             steps {
                 script {
                     echo 'Building the project...'
-                    // Add build steps here
-                }
-            }
-        }
-        stage('Test') {
-            steps {
-                script {
-                    echo 'Running tests...'
-                    // Add test steps here
+                    // error 'Build failed intentionally!'  // Uncomment to force failure
                 }
             }
         }
@@ -25,13 +20,18 @@ pipeline {
     post {
         success {
             script {
-                // Add comment to JIRA issue when build is successful
+                slackSend (
+                    channel: SLACK_CHANNEL, 
+                    color: SLACK_COLOR_SUCCESS, 
+                    message: "✅ Build successful! Build ID: ${env.BUILD_NUMBER}",
+                    username: 'jenkins',
+                    iconEmoji: ':tada:'
+                )
                 jiraAddComment(
                     site: JIRA_SITE, 
                     issueKey: JIRA_ISSUE, 
-                    comment: "✅ Build successful! Build ID: ${env.BUILD_NUMBER}"
+                    comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
                 )
-                // Transition issue to "Done" (ensure JIRA has the "Done" transition)
                 jiraTransitionIssue(
                     site: JIRA_SITE, 
                     issueKey: JIRA_ISSUE, 
@@ -41,17 +41,22 @@ pipeline {
         }
         failure {
             script {
-                // Add comment to JIRA issue when build fails
+                slackSend (
+                    channel: SLACK_CHANNEL, 
+                    color: SLACK_COLOR_FAILURE, 
+                    message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
+                    username: 'jenkins',
+                    iconEmoji: ':no_entry_sign:'
+                )
                 jiraAddComment(
                     site: JIRA_SITE, 
                     issueKey: JIRA_ISSUE, 
-                    comment: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}"
+                    comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
                 )
-                // Transition issue to "Reopened" (ensure JIRA has the "Reopened" transition)
                 jiraTransitionIssue(
                     site: JIRA_SITE, 
                     issueKey: JIRA_ISSUE, 
-                    transition: "Reopened"
+                    transition: "Reopen"
                 )
             }
         }

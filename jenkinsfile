@@ -31,18 +31,18 @@ pipeline {
         success {
             script {
                 slackSend (
-                    channel: SLACK_CHANNEL,
-                    color: SLACK_COLOR_SUCCESS,
+                    channel: env.SLACK_CHANNEL,
+                    color: env.SLACK_COLOR_SUCCESS,
                     message: "✅ Build successful! Build ID: ${env.BUILD_NUMBER}",
                     username: 'jenkins',
                     iconEmoji: ':tada:'
                 )
                 jiraComment(
-                    issueKey: JIRA_ISSUE,
+                    issueKey: env.JIRA_ISSUE,
                     comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
                 )
                 jiraTransitionIssue(
-                    issueKey: JIRA_ISSUE,
+                    issueKey: env.JIRA_ISSUE,
                     transition: "Done"
                 )
             }
@@ -51,18 +51,18 @@ pipeline {
     script {
         try {
             slackSend (
-                channel: SLACK_CHANNEL,
-                color: SLACK_COLOR_FAILURE,
+                channel: env.SLACK_CHANNEL,
+                color: env.SLACK_COLOR_FAILURE,
                 message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
                 username: 'jenkins',
                 iconEmoji: ':no_entry_sign:'
             )
             jiraComment(
-                issueKey: JIRA_ISSUE,
+                issueKey: env.JIRA_ISSUE,
                 comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
             )
             jiraTransitionIssue(
-                issueKey: JIRA_ISSUE,
+                issueKey: env.JIRA_ISSUE,
                 transition: "Reopen"
             )
         } catch (Exception e) {

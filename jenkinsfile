@@ -47,24 +47,28 @@ pipeline {
                 )
             }
         }
-        failure {
-            script {
-                slackSend (
-                    channel: SLACK_CHANNEL,
-                    color: SLACK_COLOR_FAILURE,
-                    message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
-                    username: 'jenkins',
-                    iconEmoji: ':no_entry_sign:'
-                )
-                jiraComment(
-                    issueKey: JIRA_ISSUE,
-                    comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
-                )
-                jiraTransitionIssue(
-                    issueKey: JIRA_ISSUE,
-                    transition: "Reopen"
-                )
-            }
+       failure {
+    script {
+        try {
+            slackSend (
+                channel: SLACK_CHANNEL,
+                color: SLACK_COLOR_FAILURE,
+                message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
+                username: 'jenkins',
+                iconEmoji: ':no_entry_sign:'
+            )
+            jiraComment(
+                issueKey: JIRA_ISSUE,
+                comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
+            )
+            jiraTransitionIssue(
+                issueKey: JIRA_ISSUE,
+                transition: "Reopen"
+            )
+        } catch (Exception e) {
+            echo "Error during failure handling: ${e.getMessage()}"
         }
     }
+}
+   }
 }

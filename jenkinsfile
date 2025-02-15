@@ -5,24 +5,9 @@ pipeline {
         SLACK_COLOR_SUCCESS = 'good'
         SLACK_COLOR_FAILURE = 'danger'
         JIRA_SITE = 'jenkins-jira'
+        JIRA_ISSUE = 'SMS-7'  // Replace with your actual JIRA issue key
     }
     stages {
-        stage('Extract Jira Issue Key') {
-            steps {
-                script {
-                    def branchName = env.GIT_BRANCH ?: 'unknown'
-                    echo "Branch Name detected: ${branchName}"  // Debugging step
-                    
-                    def jiraIssue = ''
-                    def matcher = (branchName =~ /([A-Z]+-[0-9]+)/)  // Updated regex
-                    
-                    jiraIssue = matcher ? matcher[0][0] : ''
-                    
-                    env.JIRA_ISSUE = jiraIssue
-                    echo "Extracted JIRA Issue Key: ${env.JIRA_ISSUE}"
-                }
-            }
-        }
         stage('Build') {
             steps {
                 script {
@@ -49,37 +34,27 @@ pipeline {
                     iconEmoji: ':tada:'
                 )
                 try {
-                    if (env.JIRA_ISSUE) {
-                        echo "Updating Jira issue: ${env.JIRA_ISSUE}"
-                        jiraAddComment(issueKey: env.JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}")
-                        jiraTransitionIssue(issueKey: env.JIRA_ISSUE, transition: "Done")
-                    } else {
-                        echo "⚠️ No JIRA issue key extracted, skipping Jira update."
-                    }
+                    jiraAddComment(issueKey: env.JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}")
+                    jiraTransitionIssue(issueKey: env.JIRA_ISSUE, transition: "Done")
                 } catch (Exception e) {
-                    echo "Jira update failed: ${e.getMessage()}"
+                    echo "JIRA update failed: ${e.getMessage()}"
                 }
             }
         }
         failure {
             script {
+                slackSend (
+                    channel: env.SLACK_CHANNEL,
+                    color: env.SLACK_COLOR_FAILURE,
+                    message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
+                    username: 'jenkins',
+                    iconEmoji: ':no_entry_sign:'
+                )
                 try {
-                    slackSend (
-                        channel: env.SLACK_CHANNEL,
-                        color: env.SLACK_COLOR_FAILURE,
-                        message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
-                        username: 'jenkins',
-                        iconEmoji: ':no_entry_sign:'
-                    )
-                    if (env.JIRA_ISSUE) {
-                        echo "Updating Jira issue: ${env.JIRA_ISSUE} (Failure)"
-                        jiraAddComment(issueKey: env.JIRA_ISSUE, comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}")
-                        jiraTransitionIssue(issueKey: env.JIRA_ISSUE, transition: "Reopen")
-                    } else {
-                        echo "⚠️ No JIRA issue key extracted, skipping Jira update."
-                    }
+                    jiraAddComment(issueKey: env.JIRA_ISSUE, comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}")
+                    jiraTransitionIssue(issueKey: env.JIRA_ISSUE, transition: "Reopen")
                 } catch (Exception e) {
-                    echo "Error during failure handling: ${e.getMessage()}"
+                    echo "JIRA update failed: ${e.getMessage()}"
                 }
             }
         }

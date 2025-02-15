@@ -10,7 +10,7 @@ pipeline {
         stage('Extract Jira Issue Key') {
             steps {
                 script {
-                    env.JIRA_ISSUE = sh(script: 'echo ${GIT_BRANCH} | grep -o "SMS-[0-9]\\+"', returnStdout: true).trim()
+                    env.JIRA_ISSUE = bat(script: 'echo ${GIT_BRANCH} | grep -o "SMS-[0-9]\\+"', returnStdout: true).trim()
                     echo "Extracted JIRA Issue Key: ${env.JIRA_ISSUE}"
                 }
             }

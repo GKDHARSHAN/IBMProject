@@ -3,7 +3,7 @@ pipeline {
     environment {
         SLACK_CHANNEL = '#general'
         SLACK_COLOR_SUCCESS = 'good'
-        SLACK_COLOR_FAILURE = 'danger'
+        SLACK_COLOR_FAILURE = 'danger' 
         JIRA_SITE = 'jenkins-jira'  // Your Jira site configured in Jenkins
     }
     stages {

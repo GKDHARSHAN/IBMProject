@@ -1,7 +1,7 @@
 pipeline {
     agent any
     parameters {
-        string(name: 'JIRA_ISSUE', defaultValue: 'ABC-123', description: 'Enter the JIRA Issue Key')
+        string(name: 'JIRA_ISSUE', defaultValue: 'SMS-7', description: 'Enter the JIRA Issue Key')
     }
     environment {
         SLACK_CHANNEL = '#general'

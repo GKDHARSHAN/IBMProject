@@ -1,7 +1,7 @@
 pipeline {
     agent any
     parameters {
-        string(name: 'JIRA_ISSUE', defaultValue: 'SMS-7', description: 'Enter the JIRA Issue Key')
+        string(name: 'JIRA_ISSUE', defaultValue: 'ABC-123', description: 'Enter the JIRA Issue Key')
     }
     environment {
         SLACK_CHANNEL = '#general'
@@ -28,14 +28,9 @@ pipeline {
     post {
         success {
             script {
-                slackSend (
-                    channel: env.SLACK_CHANNEL,
-                    color: env.SLACK_COLOR_SUCCESS,
-                    message: "✅ Build successful! Build ID: ${env.BUILD_NUMBER}",
-                    username: 'jenkins',
-                    iconEmoji: ':tada:'
-                )
-                if (params.JIRA_ISSUE) {
+                echo "JIRA Issue Key: ${params.JIRA_ISSUE}"  // Debugging
+
+                if (params.JIRA_ISSUE?.trim()) {
                     jiraAddComment(issueKey: params.JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}")
                     jiraTransitionIssue(issueKey: params.JIRA_ISSUE, transition: "Done")
                 } else {
@@ -45,14 +40,9 @@ pipeline {
         }
         failure {
             script {
-                slackSend (
-                    channel: env.SLACK_CHANNEL,
-                    color: env.SLACK_COLOR_FAILURE,
-                    message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
-                    username: 'jenkins',
-                    iconEmoji: ':no_entry_sign:'
-                )
-                if (params.JIRA_ISSUE) {
+                echo "JIRA Issue Key: ${params.JIRA_ISSUE}"  // Debugging
+
+                if (params.JIRA_ISSUE?.trim()) {
                     jiraAddComment(issueKey: params.JIRA_ISSUE, comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}")
                     jiraTransitionIssue(issueKey: params.JIRA_ISSUE, transition: "Reopen")
                 } else {

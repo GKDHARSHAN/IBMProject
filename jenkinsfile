@@ -5,13 +5,19 @@ pipeline {
         SLACK_COLOR_SUCCESS = 'good'
         SLACK_COLOR_FAILURE = 'danger'
         JIRA_SITE = 'jenkins-jira'  // Your Jira site configured in Jenkins
-        JIRA_ISSUE = sh(script: 'echo ${GIT_BRANCH} | grep -o "SMS-[0-9]\\+"', returnStdout: true).trim()
     }
     stages {
+        stage('Extract Jira Issue Key') {
+            steps {
+                script {
+                    env.JIRA_ISSUE = sh(script: 'echo ${GIT_BRANCH} | grep -o "SMS-[0-9]\\+"', returnStdout: true).trim()
+                    echo "Extracted JIRA Issue Key: ${env.JIRA_ISSUE}"
+                }
+            }
+        }
         stage('Build') {
             steps {
                 script {
-                    echo "JIRA Issue Key: ${JIRA_ISSUE}"
                     echo 'Building the project...'
                     // Uncomment below to fail the build intentionally
                     // error 'Build failed intentionally!'
@@ -37,38 +43,42 @@ pipeline {
                     username: 'jenkins',
                     iconEmoji: ':tada:'
                 )
-                jiraComment(
-                    issueKey: env.JIRA_ISSUE,
-                    comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
-                )
-                jiraTransitionIssue(
-                    issueKey: env.JIRA_ISSUE,
-                    transition: "Done"
-                )
+                if (env.JIRA_ISSUE) {
+                    jiraComment(
+                        issueKey: env.JIRA_ISSUE,
+                        comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
+                    )
+                    jiraTransitionIssue(
+                        issueKey: env.JIRA_ISSUE,
+                        transition: "Done"
+                    )
+                }
             }
         }
-       failure {
-    script {
-        try {
-            slackSend (
-                channel: env.SLACK_CHANNEL,
-                color: env.SLACK_COLOR_FAILURE,
-                message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
-                username: 'jenkins',
-                iconEmoji: ':no_entry_sign:'
-            )
-            jiraComment(
-                issueKey: env.JIRA_ISSUE,
-                comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
-            )
-            jiraTransitionIssue(
-                issueKey: env.JIRA_ISSUE,
-                transition: "Reopen"
-            )
-        } catch (Exception e) {
-            echo "Error during failure handling: ${e.getMessage()}"
+        failure {
+            script {
+                try {
+                    slackSend (
+                        channel: env.SLACK_CHANNEL,
+                        color: env.SLACK_COLOR_FAILURE,
+                        message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
+                        username: 'jenkins',
+                        iconEmoji: ':no_entry_sign:'
+                    )
+                    if (env.JIRA_ISSUE) {
+                        jiraComment(
+                            issueKey: env.JIRA_ISSUE,
+                            comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
+                        )
+                        jiraTransitionIssue(
+                            issueKey: env.JIRA_ISSUE,
+                            transition: "Reopen"
+                        )
+                    }
+                } catch (Exception e) {
+                    echo "Error during failure handling: ${e.getMessage()}"
+                }
+            }
         }
     }
-}
-   }
 }

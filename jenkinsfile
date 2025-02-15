@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        JIRA_SITE = 'jenkins-jira'
+        JIRA_SITE = 'darshangk11-1735925303258.atlassian.net'
         JIRA_ISSUE = 'SMS-7'  // Ensure this exists in JIRA
     }
     stages {

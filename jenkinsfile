@@ -1,16 +1,16 @@
 pipeline {
     agent any
     environment {
-        JIRA_SITE = 'jenkins-jira'  // Must match JIRA Site Name in Jenkins
-        JIRA_ISSUE = 'MJP-1'  // Updated with new issue key
+        JIRA_SITE = 'jenkins-jira'  // Ensure this is the correct name
+        JIRA_ISSUE = 'MJP-1'  // Ensure the issue exists in JIRA
     }
     stages {
         stage('Verify JIRA Access') {
             steps {
                 script {
                     try {
-                        jiraComment site: JIRA_SITE, issueKey: JIRA_ISSUE, comment: "✅ Jenkins Pipeline is working with MJP-1!"
-                        echo "✅ JIRA Access Verified!"
+                        jiraAddComment idOrKey: JIRA_ISSUE, comment: "✅ Jenkins Pipeline is working with MJP-1!"
+                        echo "✅ JIRA Comment Added Successfully!"
                     } catch (Exception e) {
                         echo "❌ JIRA Access Failed: ${e.getMessage()}"
                     }

@@ -1,13 +1,11 @@
 pipeline {
     agent any
-    parameters {
-        string(name: 'JIRA_ISSUE', defaultValue: 'SMS-7', description: 'Enter the JIRA Issue Key')
-    }
     environment {
         SLACK_CHANNEL = '#general'
         SLACK_COLOR_SUCCESS = 'good'
         SLACK_COLOR_FAILURE = 'danger'
         JIRA_SITE = 'jenkins-jira'
+        JIRA_ISSUE = 'SMS-7'  // ✅ Hardcoded JIRA Issue Key
     }
     stages {
         stage('Build') {
@@ -28,17 +26,15 @@ pipeline {
     post {
         success {
             script {
-                echo "JIRA Issue Key: ${params.JIRA_ISSUE}"  // Debugging
+                echo "JIRA Issue Key: ${env.JIRA_ISSUE}"
 
-                if (params.JIRA_ISSUE?.trim()) {
+                if (env.JIRA_ISSUE?.trim()) {
                     jiraComment(
-                        site: env.JIRA_SITE,
-                        issueKey: params.JIRA_ISSUE,
-                        body: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
+                        issueKey: env.JIRA_ISSUE,  // ✅ Correct parameter
+                        comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
                     )
                     jiraTransitionIssue(
-                        site: env.JIRA_SITE,
-                        issueKey: params.JIRA_ISSUE,
+                        issueKey: env.JIRA_ISSUE,  // ✅ Correct parameter
                         transition: "Done"
                     )
                 } else {
@@ -48,17 +44,15 @@ pipeline {
         }
         failure {
             script {
-                echo "JIRA Issue Key: ${params.JIRA_ISSUE}"  // Debugging
+                echo "JIRA Issue Key: ${env.JIRA_ISSUE}"
 
-                if (params.JIRA_ISSUE?.trim()) {
+                if (env.JIRA_ISSUE?.trim()) {
                     jiraComment(
-                        site: env.JIRA_SITE,
-                        issueKey: params.JIRA_ISSUE,
-                        body: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
+                        issueKey: env.JIRA_ISSUE,
+                        comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
                     )
                     jiraTransitionIssue(
-                        site: env.JIRA_SITE,
-                        issueKey: params.JIRA_ISSUE,
+                        issueKey: env.JIRA_ISSUE,
                         transition: "Reopen"
                     )
                 } else {

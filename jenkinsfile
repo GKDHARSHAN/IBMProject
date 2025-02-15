@@ -10,14 +10,13 @@ pipeline {
         stage('Extract Jira Issue Key') {
             steps {
                 script {
-                    // Extract branch name from Jenkins environment variable
                     def branchName = env.GIT_BRANCH ?: 'unknown'
-                    def jiraIssue = ''
+                    echo "Branch Name detected: ${branchName}"  // Debugging step
                     
-                    if (branchName) {
-                        def matcher = (branchName =~ /(SMS-[0-9]+)/)  // Regex to extract Jira issue key
-                        jiraIssue = matcher ? matcher[0][0] : ''
-                    }
+                    def jiraIssue = ''
+                    def matcher = (branchName =~ /([A-Z]+-[0-9]+)/)  // Updated regex
+                    
+                    jiraIssue = matcher ? matcher[0][0] : ''
                     
                     env.JIRA_ISSUE = jiraIssue
                     echo "Extracted JIRA Issue Key: ${env.JIRA_ISSUE}"
@@ -55,7 +54,7 @@ pipeline {
                         jiraAddComment(issueKey: env.JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}")
                         jiraTransitionIssue(issueKey: env.JIRA_ISSUE, transition: "Done")
                     } else {
-                        echo "No JIRA issue key extracted, skipping Jira update."
+                        echo "⚠️ No JIRA issue key extracted, skipping Jira update."
                     }
                 } catch (Exception e) {
                     echo "Jira update failed: ${e.getMessage()}"
@@ -77,7 +76,7 @@ pipeline {
                         jiraAddComment(issueKey: env.JIRA_ISSUE, comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}")
                         jiraTransitionIssue(issueKey: env.JIRA_ISSUE, transition: "Reopen")
                     } else {
-                        echo "No JIRA issue key extracted, skipping Jira update."
+                        echo "⚠️ No JIRA issue key extracted, skipping Jira update."
                     }
                 } catch (Exception e) {
                     echo "Error during failure handling: ${e.getMessage()}"

@@ -3,14 +3,16 @@ pipeline {
     environment {
         SLACK_CHANNEL = '#general'
         SLACK_COLOR_SUCCESS = 'good'
-        SLACK_COLOR_FAILURE = 'danger' 
-        JIRA_SITE = 'jenkins-jira'  // Your Jira site configured in Jenkins
+        SLACK_COLOR_FAILURE = 'danger'
+        JIRA_SITE = 'jenkins-jira'
     }
     stages {
         stage('Extract Jira Issue Key') {
             steps {
                 script {
-                    env.JIRA_ISSUE = bat(script: 'echo ${GIT_BRANCH} | grep -o "SMS-[0-9]\\+"', returnStdout: true).trim()
+                    def branchName = bat(script: 'echo %GIT_BRANCH%', returnStdout: true).trim()
+                    def jiraIssue = bat(script: "echo ${branchName} | findstr /R \"SMS-[0-9][0-9]*\"", returnStdout: true).trim()
+                    env.JIRA_ISSUE = jiraIssue
                     echo "Extracted JIRA Issue Key: ${env.JIRA_ISSUE}"
                 }
             }
@@ -19,8 +21,6 @@ pipeline {
             steps {
                 script {
                     echo 'Building the project...'
-                    // Uncomment below to fail the build intentionally
-                    // error 'Build failed intentionally!'
                 }
             }
         }
@@ -28,7 +28,6 @@ pipeline {
             steps {
                 script {
                     echo 'Running tests...'
-                    // Add test steps here
                 }
             }
         }
@@ -43,15 +42,13 @@ pipeline {
                     username: 'jenkins',
                     iconEmoji: ':tada:'
                 )
-                if (env.JIRA_ISSUE) {
-                    jiraComment(
-                        issueKey: env.JIRA_ISSUE,
-                        comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
-                    )
-                    jiraTransitionIssue(
-                        issueKey: env.JIRA_ISSUE,
-                        transition: "Done"
-                    )
+                try {
+                    if (env.JIRA_ISSUE) {
+                        jiraComment(issueKey: env.JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}")
+                        jiraTransitionIssue(issueKey: env.JIRA_ISSUE, transition: "Done")
+                    }
+                } catch (Exception e) {
+                    echo "Jira update failed: ${e.getMessage()}"
                 }
             }
         }
@@ -66,14 +63,8 @@ pipeline {
                         iconEmoji: ':no_entry_sign:'
                     )
                     if (env.JIRA_ISSUE) {
-                        jiraComment(
-                            issueKey: env.JIRA_ISSUE,
-                            comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
-                        )
-                        jiraTransitionIssue(
-                            issueKey: env.JIRA_ISSUE,
-                            transition: "Reopen"
-                        )
+                        jiraComment(issueKey: env.JIRA_ISSUE, comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}")
+                        jiraTransitionIssue(issueKey: env.JIRA_ISSUE, transition: "Reopen")
                     }
                 } catch (Exception e) {
                     echo "Error during failure handling: ${e.getMessage()}"

@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         JIRA_SITE = 'jenkins-jira'  // Ensure this matches your Jenkins JIRA config
-        JIRA_ISSUE = 'SMS-7'  // Replace with your actual issue key
+        JIRA_ISSUE = 'MJP-1'  // Replace with your actual issue key
     }
     stages {
         stage('Verify JIRA Access') {

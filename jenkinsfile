@@ -29,12 +29,12 @@ pipeline {
                 echo "JIRA Issue Key: ${env.JIRA_ISSUE}"
 
                 if (env.JIRA_ISSUE?.trim()) {
-                    jiraComment(
-                        issueKey: env.JIRA_ISSUE,  // ✅ Correct parameter
+                    jiraAddComment(
+                        issueKey: env.JIRA_ISSUE,  // ✅ Correct step for adding comments
                         comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
                     )
-                    jiraTransitionIssue(
-                        issueKey: env.JIRA_ISSUE,  // ✅ Correct parameter
+                    jiraIssueTransition(
+                        issueKey: env.JIRA_ISSUE,  // ✅ Correct step for transitioning issues
                         transition: "Done"
                     )
                 } else {
@@ -47,11 +47,11 @@ pipeline {
                 echo "JIRA Issue Key: ${env.JIRA_ISSUE}"
 
                 if (env.JIRA_ISSUE?.trim()) {
-                    jiraComment(
+                    jiraAddComment(
                         issueKey: env.JIRA_ISSUE,
                         comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
                     )
-                    jiraTransitionIssue(
+                    jiraIssueTransition(
                         issueKey: env.JIRA_ISSUE,
                         transition: "Reopen"
                     )

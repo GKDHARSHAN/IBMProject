@@ -8,16 +8,22 @@ pipeline {
     }
     stages {
         stage('Extract Jira Issue Key') {
-    steps {
-        script {
-            def branchName = bat(script: 'echo %GIT_BRANCH%', returnStdout: true).trim()
-            def matcher = (branchName =~ /(SMS-[0-9]+)/)  // Groovy regex matching
-            def jiraIssue = matcher ? matcher[0][0] : ''
-            env.JIRA_ISSUE = jiraIssue
-            echo "Extracted JIRA Issue Key: ${env.JIRA_ISSUE}"
+            steps {
+                script {
+                    // Get the branch name safely
+                    def branchName = bat(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                    def jiraIssue = ''
+                    
+                    if (branchName) {
+                        def matcher = (branchName =~ /(SMS-[0-9]+)/)  // Groovy regex matching
+                        jiraIssue = matcher ? matcher[0][0] : ''
+                    }
+                    
+                    env.JIRA_ISSUE = jiraIssue
+                    echo "Extracted JIRA Issue Key: ${env.JIRA_ISSUE}"
+                }
+            }
         }
-    }
-}
         stage('Build') {
             steps {
                 script {

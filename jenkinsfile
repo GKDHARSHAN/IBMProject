@@ -8,15 +8,15 @@ pipeline {
     }
     stages {
         stage('Extract Jira Issue Key') {
-            steps {
-                script {
-                    def branchName = bat(script: 'echo %GIT_BRANCH%', returnStdout: true).trim()
-                    def jiraIssue = bat(script: "echo ${branchName} | findstr /R \"SMS-[0-9][0-9]*\"", returnStdout: true).trim()
-                    env.JIRA_ISSUE = jiraIssue
-                    echo "Extracted JIRA Issue Key: ${env.JIRA_ISSUE}"
-                }
-            }
+    steps {
+        script {
+            def branchName = powershell(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
+            def jiraIssue = powershell(script: "($branchName -match 'SMS-[0-9]+') ? $matches[0] : ''", returnStdout: true).trim()
+            env.JIRA_ISSUE = jiraIssue
+            echo "Extracted JIRA Issue Key: ${env.JIRA_ISSUE}"
         }
+    }
+}
         stage('Build') {
             steps {
                 script {

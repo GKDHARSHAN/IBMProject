@@ -1,13 +1,23 @@
 pipeline {
     agent any
+    
     environment {
         SLACK_CHANNEL = '#general'
         SLACK_COLOR_SUCCESS = 'good'
         SLACK_COLOR_FAILURE = 'danger'
-        JIRA_SITE = 'jenkins-jira'
-        JIRA_ISSUE = 'SMS-7'  // ✅ Hardcoded JIRA Issue Key
+        JIRA_SITE = 'jenkins-jira'  // Change this to your Jira site name
+        JIRA_ISSUE = 'SMS-7'  // Manually setting JIRA Issue Key since branch name does not contain it
     }
+
     stages {
+        stage('Extract JIRA Issue Key') {
+            steps {
+                script {
+                    echo "JIRA Issue Key: ${env.JIRA_ISSUE}"
+                }
+            }
+        }
+
         stage('Build') {
             steps {
                 script {
@@ -15,6 +25,7 @@ pipeline {
                 }
             }
         }
+
         stage('Test') {
             steps {
                 script {
@@ -23,40 +34,58 @@ pipeline {
             }
         }
     }
+
     post {
         success {
             script {
-                echo "JIRA Issue Key: ${env.JIRA_ISSUE}"
+                def jiraLink = env.JIRA_ISSUE ? "<https://your-jira-instance/browse/${env.JIRA_ISSUE}|${env.JIRA_ISSUE}>" : "No JIRA issue linked"
+                
+                // ✅ Send Slack notification
+                slackSend (
+                    channel: env.SLACK_CHANNEL,
+                    color: env.SLACK_COLOR_SUCCESS,
+                    message: "✅ *Build Successful!* \n🔢 *Build ID:* ${env.BUILD_NUMBER} \n🔗 *JIRA:* ${jiraLink} \n🌱 *Branch:* ${env.GIT_BRANCH}",
+                    username: 'jenkins',
+                    iconEmoji: ':tada:'
+                )
 
-                if (env.JIRA_ISSUE?.trim()) {
-                    jiraAddComment(
-                        issueKey: env.JIRA_ISSUE,  // ✅ Correct step for adding comments
-                        comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
-                    )
-                    jiraIssueTransition(
-                        issueKey: env.JIRA_ISSUE,  // ✅ Correct step for transitioning issues
-                        transition: "Done"
-                    )
-                } else {
-                    echo "⚠️ No JIRA issue key provided, skipping JIRA update."
+                try {
+                    if (env.JIRA_ISSUE) {
+                        // ✅ Add a comment to JIRA
+                        jiraAddComment idOrKey: env.JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
+
+                        // ✅ Transition JIRA issue to "Done"
+                        jiraTransitionIssue idOrKey: env.JIRA_ISSUE, transition: "Done"
+                    }
+                } catch (Exception e) {
+                    echo "JIRA update failed: ${e.getMessage()}"
                 }
             }
         }
+        
         failure {
             script {
-                echo "JIRA Issue Key: ${env.JIRA_ISSUE}"
+                def jiraLink = env.JIRA_ISSUE ? "<https://your-jira-instance/browse/${env.JIRA_ISSUE}|${env.JIRA_ISSUE}>" : "No JIRA issue linked"
+                
+                // ❌ Send Slack notification
+                slackSend (
+                    channel: env.SLACK_CHANNEL,
+                    color: env.SLACK_COLOR_FAILURE,
+                    message: "❌ *Build Failed!* \n🔢 *Build ID:* ${env.BUILD_NUMBER} \n🔗 *JIRA:* ${jiraLink} \n🌱 *Branch:* ${env.GIT_BRANCH}",
+                    username: 'jenkins',
+                    iconEmoji: ':no_entry_sign:'
+                )
 
-                if (env.JIRA_ISSUE?.trim()) {
-                    jiraAddComment(
-                        issueKey: env.JIRA_ISSUE,
-                        comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
-                    )
-                    jiraIssueTransition(
-                        issueKey: env.JIRA_ISSUE,
-                        transition: "Reopen"
-                    )
-                } else {
-                    echo "⚠️ No JIRA issue key provided, skipping JIRA update."
+                try {
+                    if (env.JIRA_ISSUE) {
+                        // ❌ Add a comment to JIRA
+                        jiraAddComment idOrKey: env.JIRA_ISSUE, comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
+
+                        // ❌ Transition JIRA issue to "Reopen"
+                        jiraTransitionIssue idOrKey: env.JIRA_ISSUE, transition: "Reopen"
+                    }
+                } catch (Exception e) {
+                    echo "JIRA update failed: ${e.getMessage()}"
                 }
             }
         }

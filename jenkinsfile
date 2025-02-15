@@ -1,18 +1,18 @@
 pipeline {
     agent any
     environment {
-        JIRA_SITE = 'darshangk11-1735925303258.atlassian.net'
-        JIRA_ISSUE = 'SMS-7'  // Ensure this exists in JIRA
+        JIRA_SITE = 'jenkins-jira'  // Must match Jenkins JIRA configuration
+        JIRA_ISSUE = 'SMS-7'  // Replace with your actual issue key
     }
     stages {
         stage('Verify JIRA Access') {
             steps {
                 script {
                     try {
-                        jiraAddComment idOrKey: env.JIRA_ISSUE, comment: "Testing JIRA Access from Jenkins"
-                        echo "JIRA Access Verified!"
+                        jiraAddComment site: env.JIRA_SITE, idOrKey: env.JIRA_ISSUE, comment: "✅ Jenkins Pipeline is working!"
+                        echo "✅ JIRA Access Verified!"
                     } catch (Exception e) {
-                        echo "JIRA Access Failed: ${e.getMessage()}"
+                        echo "❌ JIRA Access Failed: ${e.getMessage()}"
                     }
                 }
             }

@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        JIRA_SITE = 'jenkins-jira'  // Must match Jenkins JIRA configuration
+        JIRA_SITE = 'JIRA_SITE = 'darshangk11-1735925303258.atlassian.net'  // Must match Jenkins JIRA configuration
         JIRA_ISSUE = 'SMS-7'  // Replace with your actual issue key
     }
     stages {

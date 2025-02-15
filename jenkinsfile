@@ -1,21 +1,64 @@
 pipeline {
     agent any
     environment {
-        JIRA_SITE = 'jenkins-jira'  // Ensure this is the correct name
-        JIRA_ISSUE = 'MJP-1'  // Ensure the issue exists in JIRA
+        JIRA_SITE = 'jenkins-jira'  
+        JIRA_ISSUE = 'MJP-1'  // Updated issue key
+        SLACK_CHANNEL = '#general'
+        SLACK_COLOR_SUCCESS = 'good'
+        SLACK_COLOR_FAILURE = 'danger'
     }
     stages {
-        stage('Verify JIRA Access') {
+        stage('Build') {
             steps {
                 script {
-                    try {
-                        jiraAddComment idOrKey: JIRA_ISSUE, comment: "✅ Jenkins Pipeline is working with MJP-1!"
-                        echo "✅ JIRA Comment Added Successfully!"
-                    } catch (Exception e) {
-                        echo "❌ JIRA Access Failed: ${e.getMessage()}"
-                    }
+                    echo 'Building the project...'
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                script {
+                    echo 'Running tests...'
+                }
+            }
+        }
+    }
+    post {
+        success {
+            script {
+                slackSend (
+                    channel: env.SLACK_CHANNEL,
+                    color: env.SLACK_COLOR_SUCCESS,
+                    message: "✅ Build successful! Build ID: ${env.BUILD_NUMBER}",
+                    username: 'jenkins',
+                    iconEmoji: ':tada:'
+                )
+                try {
+                    jiraAddComment idOrKey: env.JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
+                    jiraTransitionIssue idOrKey: env.JIRA_ISSUE, transition: "Done"
+                    echo "✅ JIRA Issue ${env.JIRA_ISSUE} updated successfully!"
+                } catch (Exception e) {
+                    echo "❌ JIRA update failed: ${e.getMessage()}"
+                }
+            }
+        }
+        failure {
+            script {
+                slackSend (
+                    channel: env.SLACK_CHANNEL,
+                    color: env.SLACK_COLOR_FAILURE,
+                    message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
+                    username: 'jenkins',
+                    iconEmoji: ':no_entry_sign:'
+                )
+                try {
+                    jiraAddComment idOrKey: env.JIRA_ISSUE, comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
+                    jiraTransitionIssue idOrKey: env.JIRA_ISSUE, transition: "Reopen"
+                } catch (Exception e) {
+                    echo "❌ JIRA update failed: ${e.getMessage()}"
                 }
             }
         }
     }
 }
+

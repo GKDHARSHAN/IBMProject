@@ -6,12 +6,16 @@ pipeline {
         SLACK_CHANNEL = '#general' 
         SLACK_COLOR_SUCCESS = 'good'
         SLACK_COLOR_FAILURE = 'danger'
+        IMAGE_NAME = 'my-container-image'
+        CONTAINER_PORT = '8080'
+        K8S_DEPLOYMENT_FILE = 'kubernetes-deployment.yaml'
     }
     stages {
         stage('Build') {
             steps {
                 script {
                     echo 'Building the project...'
+                    sh 'docker build -t $IMAGE_NAME .'
                 }
             }
         }
@@ -19,6 +23,32 @@ pipeline {
             steps {
                 script {
                     echo 'Running tests...'
+                }
+            }
+        }
+        stage('Push to Local Docker Registry') {
+            steps {
+                script {
+                    echo 'Tagging and pushing Docker image...'
+                    sh 'docker tag $IMAGE_NAME localhost:5000/$IMAGE_NAME'
+                    sh 'docker push localhost:5000/$IMAGE_NAME'
+                }
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    echo 'Deploying to Kubernetes...'
+                    sh 'kubectl apply -f $K8S_DEPLOYMENT_FILE'
+                    sh 'kubectl rollout status deployment/my-deployment'
+                }
+            }
+        }
+        stage('Expose Service in Minikube') {
+            steps {
+                script {
+                    echo 'Exposing service...'
+                    sh 'minikube service my-service --url'
                 }
             }
         }
@@ -61,4 +91,3 @@ pipeline {
         }
     }
 }
-

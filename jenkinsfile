@@ -1,8 +1,8 @@
-pipeline {
+pipeline {  
     agent any
     environment {
         JIRA_SITE = 'jenkins-jira'  
-        JIRA_ISSUE = 'MJP-1'  // Updated issue key
+        JIRA_ISSUE = 'MJP-1'
         SLACK_CHANNEL = '#general' 
         SLACK_COLOR_SUCCESS = 'good'
         SLACK_COLOR_FAILURE = 'danger'

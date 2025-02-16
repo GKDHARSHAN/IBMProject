@@ -65,7 +65,7 @@ pipeline {
                 )
                 try {
                     jiraAddComment idOrKey: env.JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
-                    jiraTransitionIssue idOrKey: env.JIRA_ISSUE, transition: "Done"
+                    jiraTransitionIssue idOrKey: env.JIRA_ISSUE, transition: "21"
                     echo "✅ JIRA Issue ${env.JIRA_ISSUE} updated successfully!"
                 } catch (Exception e) {
                     echo "❌ JIRA update failed: ${e.getMessage()}"

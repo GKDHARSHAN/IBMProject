@@ -14,6 +14,6 @@ def hello_world():
 
 if __name__ == '__main__':
     # Start Prometheus metrics server on port 8000
-    start_http_server(8000)
+    start_http_server(8082)
     # Start Flask app on port 8081
     app.run(debug=True, host='0.0.0.0', port=8081)

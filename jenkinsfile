@@ -1,36 +1,29 @@
 pipeline {
     agent any
-
     environment {
-        CONTAINER_NAME = "myapp_container"
-        IMAGE_NAME = "myapp:latest"
-        JIRA_ISSUE_ID = "MJP-1" // Replace with your actual JIRA issue key
+        IMAGE_NAME = 'myapp:latest'
+        CONTAINER_NAME = 'myapp_container'
+        DOCKER_REGISTRY = 'docker.io'
+        GITHUB_REPO = 'https://github.com/GKDHARSHAN/IBMProject.git'
     }
-
     stages {
-        stage('Checkout') {
+        stage('Checkout SCM') {
             steps {
-                script {
-                    try {
-                        checkout scm
-                    } catch (Exception e) {
-                        echo "❌ Checkout failed: ${e.message}"
-                        currentBuild.result = 'FAILURE'
-                        error("Stopping pipeline due to checkout failure")
-                    }
-                }
+                checkout scm
             }
         }
 
         stage('Build') {
             steps {
                 echo '🔨 Building the project...'
+                // Add build commands here, like mvn, gradle, etc.
             }
         }
 
         stage('Test') {
             steps {
                 echo '🧪 Running tests...'
+                // Add test commands here, like unit tests or integration tests
             }
         }
 
@@ -50,60 +43,32 @@ pipeline {
                     def containerId = bat(script: "docker ps -q --filter 'name=${CONTAINER_NAME}'", returnStdout: true).trim()
 
                     if (containerId) {
-                        bat "docker stop ${CONTAINER_NAME}"
-                        bat "docker rm ${CONTAINER_NAME}"
+                        echo 'Stopping and removing existing container...'
+                        bat "docker stop ${containerId}"
+                        bat "docker rm ${containerId}"
                     } else {
-                        echo "ℹ️ No running container found."
+                        echo "No running container to stop"
                     }
 
-                    echo '🚀 Starting new container...'
+                    echo 'Starting new container...'
                     bat "docker run -d --name ${CONTAINER_NAME} -p 8000:8000 ${IMAGE_NAME}"
                 }
             }
         }
-    }
 
-    post {
-        success {
-            script {
-                slackSend(
-                    channel: '#general',
-                    color: 'good',
-                    message: "✅ *Build Successful!* 🎉\n*Build ID:* ${env.BUILD_ID}",
-                    teamDomain: 'ibmproject-hq',
-                    tokenCredentialId: 'slack'
-                )
-
-                jiraAddComment(
-                    site: 'jenkins-jira',
-                    idOrKey: JIRA_ISSUE_ID,
-                    comment: "✅ Build Successful! 🚀\n*Build ID:* ${env.BUILD_ID}"
-                )
-
-                jiraTransitionIssue(
-                    site: 'jenkins-jira',
-                    idOrKey: JIRA_ISSUE_ID,
-                    transitionId: '21' // Update with actual transition ID
-                )
+        stage('Post Actions') {
+            steps {
+                script {
+                    slackSend(channel: '#general', color: 'danger', message: '❌ Build Failed! ⚠️')
+                    jiraAddComment(issueKey: 'MJP-1', comment: '❌ Build Failed! ⚠️\n*Build ID:* 125')
+                }
             }
         }
-
+    }
+    post {
         failure {
-            script {
-                slackSend(
-                    channel: '#general',
-                    color: 'danger',
-                    message: "❌ *Build Failed!* 🚨\n*Build ID:* ${env.BUILD_ID}",
-                    teamDomain: 'ibmproject-hq',
-                    tokenCredentialId: 'slack'
-                )
-
-                jiraAddComment(
-                    site: 'jenkins-jira',
-                    idOrKey: JIRA_ISSUE_ID,
-                    comment: "❌ Build Failed! ⚠️\n*Build ID:* ${env.BUILD_ID}"
-                )
-            }
+            echo 'Build failed!'
+            // Any additional failure handling like notifying via Slack or email
         }
     }
 }

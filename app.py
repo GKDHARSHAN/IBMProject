@@ -1,10 +1,14 @@
-from flask import Flask
+from prometheus_client import start_http_server, Counter
+import time
 
-app = Flask(__name__)
+# Create a metric to track the number of requests
+REQUESTS = Counter('hello_world_requests_total', 'Total number of hello world requests')
 
-@app.route('/')
-def home():
-    return "Hello, World! Your Jenkins-Docker integration is successful!"
+def app():
+    while True:
+        REQUESTS.inc()
+        time.sleep(1)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+    start_http_server(8000)  # Exposes metrics at http://localhost:8000/metrics
+    app()

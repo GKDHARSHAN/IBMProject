@@ -6,6 +6,11 @@ scrape_configs:
     metrics_path: '/prometheus'
     static_configs:
       - targets: ['host.docker.internal:8080']  # Jenkins metrics endpoint
+
   - job_name: 'docker'
     static_configs:
       - targets: ['host.docker.internal:9323']  # Docker metrics endpoint
+
+  - job_name: 'flask_app'
+    static_configs:
+      - targets: ['host.docker.internal:8000']  # Flask metrics endpoint

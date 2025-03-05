@@ -1,11 +1,12 @@
 pipeline {
     agent any
+
     environment {
         IMAGE_NAME = 'myapp:latest'
         CONTAINER_NAME = 'myapp_container'
-        DOCKER_REGISTRY = 'docker.io'
-        GITHUB_REPO = 'https://github.com/GKDHARSHAN/IBMProject.git'
+        DOCKERFILE_PATH = './Dockerfile'
     }
+
     stages {
         stage('Checkout SCM') {
             steps {
@@ -16,53 +17,64 @@ pipeline {
         stage('Build') {
             steps {
                 echo '🔨 Building the project...'
-                // Add build commands here, like mvn, gradle, etc.
+                // Your build steps go here
             }
         }
 
         stage('Test') {
             steps {
                 echo '🧪 Running tests...'
-                // Add test commands here, like unit tests or integration tests
+                // Your test steps go here
             }
         }
 
         stage('Build Docker Image') {
             steps {
+                echo '🐳 Building Docker Image...'
                 script {
-                    echo '🐳 Building Docker Image...'
-                    bat "docker build -t ${IMAGE_NAME} ."
+                    bat '''
+                        docker build --no-cache -t ${IMAGE_NAME} ${DOCKERFILE_PATH}
+                    '''
                 }
             }
         }
 
         stage('Run Docker Containers') {
             steps {
+                echo '🛑 Stopping existing containers (if any)...'
                 script {
-                    echo '🛑 Stopping existing containers (if any)...'
                     bat '''
-                        docker stop $(docker ps -q --filter name=myapp_container)
-                        docker rm $(docker ps -a -q --filter name=myapp_container)
+                        docker stop ${CONTAINER_NAME} || true
+                        docker rm ${CONTAINER_NAME} || true
                     '''
-                    echo 'Starting new container...'
-                    bat 'docker run -d --name myapp_container -p 8000:8000 ${IMAGE_NAME}'
                 }
-            }
-        }
 
-        stage('Post Actions') {
-            steps {
+                echo '🚀 Running new container...'
                 script {
-                    slackSend(channel: '#general', color: 'danger', message: '❌ Build Failed! ⚠️')
-                    jiraAddComment(issueKey: 'MJP-1', comment: '❌ Build Failed! ⚠️\n*Build ID:* 125')
+                    bat '''
+                        docker run -d --name ${CONTAINER_NAME} ${IMAGE_NAME}
+                    '''
                 }
             }
         }
     }
+
     post {
+        always {
+            echo 'Cleaning up...'
+            script {
+                bat '''
+                    docker system prune -f
+                '''
+            }
+        }
+
+        success {
+            echo 'Build and deployment were successful!'
+        }
+
         failure {
-            echo 'Build failed!'
-            // Any additional failure handling like notifying via Slack or email
+            echo 'Build or deployment failed.'
         }
     }
 }

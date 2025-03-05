@@ -32,9 +32,9 @@ pipeline {
             steps {
                 echo '🐳 Building Docker Image...'
                 script {
-                    bat '''
-                        docker build --no-cache -t ${IMAGE_NAME} ${DOCKERFILE_PATH}
-                    '''
+                    bat """
+                        docker build --no-cache -t ${env.IMAGE_NAME} ${env.DOCKERFILE_PATH}
+                    """
                 }
             }
         }
@@ -44,15 +44,15 @@ pipeline {
                 echo '🛑 Stopping existing containers (if any)...'
                 script {
                     bat '''
-                        docker stop ${CONTAINER_NAME} || true
-                        docker rm ${CONTAINER_NAME} || true
+                        docker stop ${env.CONTAINER_NAME} || true
+                        docker rm ${env.CONTAINER_NAME} || true
                     '''
                 }
 
                 echo '🚀 Running new container...'
                 script {
                     bat '''
-                        docker run -d --name ${CONTAINER_NAME} ${IMAGE_NAME}
+                        docker run -d --name ${env.CONTAINER_NAME} ${env.IMAGE_NAME}
                     '''
                 }
             }

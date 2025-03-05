@@ -14,7 +14,7 @@ RUN pip install -r requirements.txt && pip install prometheus_client
 COPY prometheus.yml /etc/prometheus/prometheus.yml
 
 # Expose the application port and Prometheus metrics port
-EXPOSE 80 8000
+EXPOSE 8000
 
 # Run the application
 CMD ["python", "app.py"]

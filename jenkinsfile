@@ -4,6 +4,7 @@ pipeline {
     environment {
         CONTAINER_NAME = "myapp_container"
         IMAGE_NAME = "myapp:latest"
+        JIRA_ISSUE_ID = "MJP-1" // Replace with your actual JIRA issue key
     }
 
     stages {
@@ -23,20 +24,20 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Building the project...'
+                echo '🔨 Building the project...'
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running tests...'
+                echo '🧪 Running tests...'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo 'Building Docker Image...'
+                    echo '🐳 Building Docker Image...'
                     bat "docker build -t ${IMAGE_NAME} ."
                 }
             }
@@ -45,17 +46,17 @@ pipeline {
         stage('Run Docker Containers') {
             steps {
                 script {
-                    echo 'Stopping existing containers if running...'
+                    echo '🛑 Stopping existing containers (if any)...'
                     def containerId = bat(script: "docker ps -q --filter 'name=${CONTAINER_NAME}'", returnStdout: true).trim()
-                    
+
                     if (containerId) {
                         bat "docker stop ${CONTAINER_NAME}"
                         bat "docker rm ${CONTAINER_NAME}"
                     } else {
-                        echo "No running container to stop"
+                        echo "ℹ️ No running container found."
                     }
 
-                    echo 'Starting new container...'
+                    echo '🚀 Starting new container...'
                     bat "docker run -d --name ${CONTAINER_NAME} -p 8000:8000 ${IMAGE_NAME}"
                 }
             }
@@ -68,20 +69,20 @@ pipeline {
                 slackSend(
                     channel: '#general',
                     color: 'good',
-                    message: "✅ Build Successful! Build ID: ${env.BUILD_ID}",
+                    message: "✅ *Build Successful!* 🎉\n*Build ID:* ${env.BUILD_ID}",
                     teamDomain: 'ibmproject-hq',
                     tokenCredentialId: 'slack'
                 )
 
                 jiraAddComment(
                     site: 'jenkins-jira',
-                    issueKey: 'MJP-1',
-                    comment: "✅ Build Successful! Build ID: ${env.BUILD_ID}"
+                    idOrKey: JIRA_ISSUE_ID,
+                    comment: "✅ Build Successful! 🚀\n*Build ID:* ${env.BUILD_ID}"
                 )
 
                 jiraTransitionIssue(
                     site: 'jenkins-jira',
-                    issueKey: 'MJP-1',
+                    idOrKey: JIRA_ISSUE_ID,
                     transitionId: '21' // Update with actual transition ID
                 )
             }
@@ -92,15 +93,15 @@ pipeline {
                 slackSend(
                     channel: '#general',
                     color: 'danger',
-                    message: "❌ Build Failed! Build ID: ${env.BUILD_ID}",
+                    message: "❌ *Build Failed!* 🚨\n*Build ID:* ${env.BUILD_ID}",
                     teamDomain: 'ibmproject-hq',
                     tokenCredentialId: 'slack'
                 )
 
                 jiraAddComment(
                     site: 'jenkins-jira',
-                    issueKey: 'MJP-1',
-                    comment: "❌ Build Failed! Build ID: ${env.BUILD_ID}"
+                    idOrKey: JIRA_ISSUE_ID,
+                    comment: "❌ Build Failed! ⚠️\n*Build ID:* ${env.BUILD_ID}"
                 )
             }
         }

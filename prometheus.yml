@@ -1,16 +1,7 @@
 global:
-  scrape_interval: 5s  # How often Prometheus scrapes metrics
+  scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'jenkins'
-    metrics_path: '/prometheus'
-    static_configs:
-      - targets: ['host.docker.internal:8080']  # Jenkins metrics endpoint
-
   - job_name: 'docker'
     static_configs:
-      - targets: ['host.docker.internal:9323']  # Docker metrics endpoint
-
-  - job_name: 'flask_app'
-    static_configs:
-      - targets: ['host.docker.internal:8000']  # Flask metrics endpoint
+      - targets: ['localhost:8080']  # Replace with your service endpoints

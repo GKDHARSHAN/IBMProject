@@ -7,11 +7,14 @@ WORKDIR /app
 # Copy application files
 COPY . .
 
-# Install dependencies
-RUN pip install -r requirements.txt
+# Install dependencies (including Prometheus client)
+RUN pip install -r requirements.txt && pip install prometheus_client
 
-# Expose the application port
-EXPOSE 80
+# Copy Prometheus configuration
+COPY prometheus.yml /etc/prometheus/prometheus.yml
+
+# Expose the application port and Prometheus metrics port
+EXPOSE 80 8000
 
 # Run the application
 CMD ["python", "app.py"]

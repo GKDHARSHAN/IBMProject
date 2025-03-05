@@ -7,14 +7,14 @@ WORKDIR /app
 # Copy application files
 COPY . .
 
-# Install dependencies (including Prometheus client)
-RUN pip install -r requirements.txt && pip install prometheus_client
+# Install dependencies
+RUN pip install -r requirements.txt
 
-# Copy Prometheus configuration
+# Copy Prometheus config
 COPY prometheus.yml /etc/prometheus/prometheus.yml
 
-# Expose the application port and Prometheus metrics port
-EXPOSE 8000
+# Expose Flask and Prometheus ports
+EXPOSE 8000 9090
 
-# Run the application
-CMD ["python", "app.py"]
+# Run both Flask and Prometheus
+CMD ["sh", "-c", "python app.py & prometheus --config.file=/etc/prometheus/prometheus.yml"]

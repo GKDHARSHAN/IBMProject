@@ -1,8 +1,8 @@
 pipeline {
     agent any
     environment {
-        JIRA_SITE = 'jenkins-jira'  
-        JIRA_ISSUE = 'MJP-1'  
+        JIRA_SITE = 'jenkins-jira'
+        JIRA_ISSUE = 'MJP-1'
         SLACK_CHANNEL = '#general'
         SLACK_COLOR_SUCCESS = 'good'
         SLACK_COLOR_FAILURE = 'danger'
@@ -43,6 +43,9 @@ pipeline {
 
                     echo 'Running Docker Container...'
                     bat "docker run -d --name %CONTAINER_NAME% -p %HOST_PORT%:%CONTAINER_PORT% %DOCKER_IMAGE%"
+
+                    echo 'Running Prometheus Container...'
+                    bat "docker run -d -p 9090:9090 -v %PWD%/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus"
                 }
             }
         }

@@ -1,80 +1,87 @@
 pipeline {
     agent any
-
     environment {
-        IMAGE_NAME = 'myapp:latest'
-        CONTAINER_NAME = 'myapp_container'
-        DOCKERFILE_PATH = './Dockerfile'
+        JIRA_SITE = 'jenkins-jira'  
+        JIRA_ISSUE = 'MJP-1'  
+        SLACK_CHANNEL = '#general'
+        SLACK_COLOR_SUCCESS = 'good'
+        SLACK_COLOR_FAILURE = 'danger'
+        DOCKER_IMAGE = 'myapp:latest'
+        CONTAINER_NAME = 'my_container'
+        HOST_PORT = '8081'
+        CONTAINER_PORT = '80'
     }
-
     stages {
-        stage('Checkout SCM') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Build') {
             steps {
-                echo '🔨 Building the project...'
-                // Your build steps go here
+                script {
+                    echo 'Building the project...'
+                }
             }
         }
-
         stage('Test') {
             steps {
-                echo '🧪 Running tests...'
-                // Your test steps go here
+                script {
+                    echo 'Running tests...'
+                }
             }
         }
-
         stage('Build Docker Image') {
             steps {
-                echo '🐳 Building Docker Image...'
                 script {
-                    bat """
-                        docker build --no-cache -t ${env.IMAGE_NAME} ${env.DOCKERFILE_PATH}
-                    """
+                    echo 'Building Docker Image...'
+                    bat "docker build -t ${env.DOCKER_IMAGE} ."
                 }
             }
         }
-
-        stage('Run Docker Containers') {
+        stage('Run Docker Container') {
             steps {
-                echo '🛑 Stopping existing containers (if any)...'
                 script {
-                    bat '''
-                        docker stop ${env.CONTAINER_NAME} || true
-                        docker rm ${env.CONTAINER_NAME} || true
-                    '''
-                }
+                    echo 'Stopping any existing container...'
+                    bat "docker stop ${env.CONTAINER_NAME} || echo 'No running container to stop'"
+                    bat "docker rm ${env.CONTAINER_NAME} || echo 'No container to remove'"
 
-                echo '🚀 Running new container...'
-                script {
-                    bat '''
-                        docker run -d --name ${env.CONTAINER_NAME} ${env.IMAGE_NAME}
-                    '''
+                    echo 'Running Docker Container...'
+                    bat "docker run -d --name ${env.CONTAINER_NAME} -p ${env.HOST_PORT}:${env.CONTAINER_PORT} ${env.DOCKER_IMAGE}"
                 }
             }
         }
     }
-
     post {
-        always {
-            echo 'Cleaning up...'
+        success {
             script {
-                bat '''
-                    docker system prune -f
-                '''
+                slackSend (
+                    channel: env.SLACK_CHANNEL,
+                    color: env.SLACK_COLOR_SUCCESS,
+                    message: "✅ Build successful! Build ID: ${env.BUILD_NUMBER}",
+                    username: 'jenkins',
+                    iconEmoji: ':tada:'
+                )
+                try {
+                    jiraAddComment idOrKey: env.JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
+                    jiraTransitionIssue idOrKey: env.JIRA_ISSUE, transition: "Done"
+                    echo "✅ JIRA Issue ${env.JIRA_ISSUE} updated successfully!"
+                } catch (Exception e) {
+                    echo "❌ JIRA update failed: ${e.getMessage()}"
+                }
             }
         }
-
-        success {
-            echo 'Build and deployment were successful!'
-        }
-
         failure {
-            echo 'Build or deployment failed.'
+            script {
+                slackSend (
+                    channel: env.SLACK_CHANNEL,
+                    color: env.SLACK_COLOR_FAILURE,
+                    message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
+                    username: 'jenkins',
+                    iconEmoji: ':no_entry_sign:'
+                )
+                try {
+                    jiraAddComment idOrKey: env.JIRA_ISSUE, comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
+                    jiraTransitionIssue idOrKey: env.JIRA_ISSUE, transition: "Reopen"
+                } catch (Exception e) {
+                    echo "❌ JIRA update failed: ${e.getMessage()}"
+                }
+            }
         }
     }
 }

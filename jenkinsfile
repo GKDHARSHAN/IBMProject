@@ -2,10 +2,13 @@ pipeline {
     agent any
     environment {
         JIRA_SITE = 'jenkins-jira'  
-        JIRA_ISSUE = 'MJP-1'  // Updated issue key
+        JIRA_ISSUE = 'MJP-1'  
         SLACK_CHANNEL = '#general'
         SLACK_COLOR_SUCCESS = 'good'
         SLACK_COLOR_FAILURE = 'danger'
+        DOCKER_IMAGE = 'myapp:latest'
+        CONTAINER_NAME = 'my_container'
+        CONTAINER_PORT = '8081:80'  // Host:Container port mapping
     }
     stages {
         stage('Build') {
@@ -19,6 +22,26 @@ pipeline {
             steps {
                 script {
                     echo 'Running tests...'
+                }
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo 'Building Docker Image...'
+                    sh 'docker build -t ${DOCKER_IMAGE} .'
+                }
+            }
+        }
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    echo 'Stopping any existing container...'
+                    sh "docker stop ${CONTAINER_NAME} || true"
+                    sh "docker rm ${CONTAINER_NAME} || true"
+
+                    echo 'Running Docker Container...'
+                    sh "docker run -d --name ${CONTAINER_NAME} -p ${CONTAINER_PORT} ${DOCKER_IMAGE}"
                 }
             }
         }

@@ -1,92 +1,107 @@
 pipeline {
     agent any
+
     environment {
-        JIRA_SITE = 'jenkins-jira'
-        JIRA_ISSUE = 'MJP-1'
-        SLACK_CHANNEL = '#general'
-        SLACK_COLOR_SUCCESS = 'good'
-        SLACK_COLOR_FAILURE = 'danger'
-        DOCKER_IMAGE = 'myapp:latest'
-        CONTAINER_NAME = 'my_container'
-        PROMETHEUS_CONTAINER = 'prometheus_container'
-        HOST_PORT = '8081'
-        CONTAINER_PORT = '8000'
+        CONTAINER_NAME = "myapp_container"
+        IMAGE_NAME = "myapp:latest"
     }
+
     stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    try {
+                        checkout scm
+                    } catch (Exception e) {
+                        echo "❌ Checkout failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                        error("Stopping pipeline due to checkout failure")
+                    }
+                }
+            }
+        }
+
         stage('Build') {
             steps {
-                script {
-                    echo 'Building the project...'
-                }
+                echo 'Building the project...'
             }
         }
+
         stage('Test') {
             steps {
-                script {
-                    echo 'Running tests...'
-                }
+                echo 'Running tests...'
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 script {
                     echo 'Building Docker Image...'
-                    bat "docker build -t ${env.DOCKER_IMAGE} ."
+                    bat "docker build -t ${IMAGE_NAME} ."
                 }
             }
         }
+
         stage('Run Docker Containers') {
             steps {
                 script {
                     echo 'Stopping existing containers if running...'
-                    bat 'docker ps -q --filter "name=${env.CONTAINER_NAME}" | findstr . && docker stop ${env.CONTAINER_NAME} || echo "No running container to stop"'
-                    bat 'docker ps -q --filter "name=${env.CONTAINER_NAME}" | findstr . && docker rm ${env.CONTAINER_NAME} || echo "No container to remove"'
-                    bat 'docker ps -q --filter "name=${env.PROMETHEUS_CONTAINER}" | findstr . && docker stop ${env.PROMETHEUS_CONTAINER} || echo "No Prometheus container to stop"'
-                    bat 'docker ps -q --filter "name=${env.PROMETHEUS_CONTAINER}" | findstr . && docker rm ${env.PROMETHEUS_CONTAINER} || echo "No Prometheus container to remove"'
+                    def containerId = bat(script: "docker ps -q --filter 'name=${CONTAINER_NAME}'", returnStdout: true).trim()
+                    
+                    if (containerId) {
+                        bat "docker stop ${CONTAINER_NAME}"
+                        bat "docker rm ${CONTAINER_NAME}"
+                    } else {
+                        echo "No running container to stop"
+                    }
 
-                    echo 'Running Application Container...'
-                    bat "docker run --rm -d --name ${env.CONTAINER_NAME} -p ${env.HOST_PORT}:${env.CONTAINER_PORT} ${env.DOCKER_IMAGE}"
-
-                    echo 'Running Prometheus Container...'
-                    bat "docker run --rm -d --name ${env.PROMETHEUS_CONTAINER} -p 9090:9090 -v ${WORKSPACE}\\prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus"
+                    echo 'Starting new container...'
+                    bat "docker run -d --name ${CONTAINER_NAME} -p 8000:8000 ${IMAGE_NAME}"
                 }
             }
         }
     }
+
     post {
         success {
             script {
-                slackSend (
-                    channel: env.SLACK_CHANNEL,
-                    color: env.SLACK_COLOR_SUCCESS,
-                    message: "✅ Build successful! Build ID: ${env.BUILD_NUMBER}",
-                    username: 'jenkins',
-                    iconEmoji: ':tada:'
+                slackSend(
+                    channel: '#general',
+                    color: 'good',
+                    message: "✅ Build Successful! Build ID: ${env.BUILD_ID}",
+                    teamDomain: 'ibmproject-hq',
+                    tokenCredentialId: 'slack'
                 )
-                try {
-                    jiraAddComment idOrKey: env.JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
-                    jiraTransitionIssue idOrKey: env.JIRA_ISSUE, transition: "Done"
-                    echo "✅ JIRA Issue ${env.JIRA_ISSUE} updated successfully!"
-                } catch (Exception e) {
-                    echo "❌ JIRA update failed: ${e.getMessage()}"
-                }
+
+                jiraAddComment(
+                    site: 'jenkins-jira',
+                    issueKey: 'MJP-1',
+                    comment: "✅ Build Successful! Build ID: ${env.BUILD_ID}"
+                )
+
+                jiraTransitionIssue(
+                    site: 'jenkins-jira',
+                    issueKey: 'MJP-1',
+                    transitionId: '21' // Update with actual transition ID
+                )
             }
         }
+
         failure {
             script {
-                slackSend (
-                    channel: env.SLACK_CHANNEL,
-                    color: env.SLACK_COLOR_FAILURE,
-                    message: "❌ Build failed! Build ID: ${env.BUILD_NUMBER}",
-                    username: 'jenkins',
-                    iconEmoji: ':no_entry_sign:'
+                slackSend(
+                    channel: '#general',
+                    color: 'danger',
+                    message: "❌ Build Failed! Build ID: ${env.BUILD_ID}",
+                    teamDomain: 'ibmproject-hq',
+                    tokenCredentialId: 'slack'
                 )
-                try {
-                    jiraAddComment idOrKey: env.JIRA_ISSUE, comment: "❌ Build Failed! Build ID: ${env.BUILD_NUMBER}"
-                    jiraTransitionIssue idOrKey: env.JIRA_ISSUE, transition: "Reopen"
-                } catch (Exception e) {
-                    echo "❌ JIRA update failed: ${e.getMessage()}"
-                }
+
+                jiraAddComment(
+                    site: 'jenkins-jira',
+                    issueKey: 'MJP-1',
+                    comment: "❌ Build Failed! Build ID: ${env.BUILD_ID}"
+                )
             }
         }
     }

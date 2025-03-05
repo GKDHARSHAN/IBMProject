@@ -23,6 +23,7 @@ pipeline {
             steps {
                 script {
                     echo 'Running tests...'
+                    error("❌ Intentional failure: Test stage failed!")  // Failing the build
                 }
             }
         }

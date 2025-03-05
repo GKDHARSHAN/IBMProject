@@ -37,6 +37,15 @@ pipeline {
                     echo 'Running Docker Container...'
                     bat "docker run -d --name %CONTAINER_NAME% -p %HOST_PORT%:%CONTAINER_PORT% %DOCKER_IMAGE%"
 
+                    echo 'Checking if Prometheus container is running...'
+                    def prometheusExists = bat(script: "docker ps -q -f name=prometheus", returnStdout: true).trim()
+
+                    if (prometheusExists) {
+                        echo 'Prometheus container is already running. Stopping and removing the existing container...'
+                        bat "docker stop prometheus || exit 0"
+                        bat "docker rm prometheus || exit 0"
+                    }
+
                     echo 'Running Prometheus Container...'
                     bat "docker run -d -p 9090:9090 -v ${PROMETHEUS_CONFIG_PATH}:\\etc\\prometheus\\prometheus.yml prom/prometheus"
                 }

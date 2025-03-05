@@ -38,17 +38,17 @@ pipeline {
         stage('Run Docker Containers') {
             steps {
                 script {
-                    echo 'Stopping existing containers...'
-                    bat "docker stop ${env.CONTAINER_NAME} || echo 'No running container to stop'"
-                    bat "docker rm ${env.CONTAINER_NAME} || echo 'No container to remove'"
-                    bat "docker stop ${env.PROMETHEUS_CONTAINER} || echo 'No Prometheus container to stop'"
-                    bat "docker rm ${env.PROMETHEUS_CONTAINER} || echo 'No Prometheus container to remove'"
+                    echo 'Stopping existing containers if running...'
+                    bat 'docker ps -q --filter "name=${env.CONTAINER_NAME}" | findstr . && docker stop ${env.CONTAINER_NAME} || echo "No running container to stop"'
+                    bat 'docker ps -q --filter "name=${env.CONTAINER_NAME}" | findstr . && docker rm ${env.CONTAINER_NAME} || echo "No container to remove"'
+                    bat 'docker ps -q --filter "name=${env.PROMETHEUS_CONTAINER}" | findstr . && docker stop ${env.PROMETHEUS_CONTAINER} || echo "No Prometheus container to stop"'
+                    bat 'docker ps -q --filter "name=${env.PROMETHEUS_CONTAINER}" | findstr . && docker rm ${env.PROMETHEUS_CONTAINER} || echo "No Prometheus container to remove"'
 
-                    echo 'Running Docker Container...'
-                    bat "docker run -d --name ${env.CONTAINER_NAME} -p ${env.HOST_PORT}:${env.CONTAINER_PORT} ${env.DOCKER_IMAGE}"
+                    echo 'Running Application Container...'
+                    bat "docker run --rm -d --name ${env.CONTAINER_NAME} -p ${env.HOST_PORT}:${env.CONTAINER_PORT} ${env.DOCKER_IMAGE}"
 
                     echo 'Running Prometheus Container...'
-                    bat "docker run -d --name ${env.PROMETHEUS_CONTAINER} -p 9090:9090 -v ${WORKSPACE}/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus"
+                    bat "docker run --rm -d --name ${env.PROMETHEUS_CONTAINER} -p 9090:9090 -v ${WORKSPACE}\\prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus"
                 }
             }
         }

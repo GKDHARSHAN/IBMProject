@@ -30,7 +30,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker Image...'
-                    bat "docker build -t ${env.DOCKER_IMAGE} ."
+                    bat 'docker build -t %DOCKER_IMAGE% .'  // Using Windows command
                 }
             }
         }
@@ -38,11 +38,11 @@ pipeline {
             steps {
                 script {
                     echo 'Stopping any existing container...'
-                    bat "docker stop ${env.CONTAINER_NAME} || echo 'No running container to stop'"
-                    bat "docker rm ${env.CONTAINER_NAME} || echo 'No container to remove'"
+                    bat "docker stop %CONTAINER_NAME% || exit 0"
+                    bat "docker rm %CONTAINER_NAME% || exit 0"
 
                     echo 'Running Docker Container...'
-                    bat "docker run -d --name ${env.CONTAINER_NAME} -p ${env.HOST_PORT}:${env.CONTAINER_PORT} ${env.DOCKER_IMAGE}"
+                    bat "docker run -d --name %CONTAINER_NAME% -p %HOST_PORT%:%CONTAINER_PORT% %DOCKER_IMAGE%"
                 }
             }
         }

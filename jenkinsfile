@@ -47,7 +47,8 @@ pipeline {
                     }
 
                     echo 'Running Prometheus Container...'
-                    bat "docker run -d -p 9090:9090 -v ${PROMETHEUS_CONFIG_PATH}:\\etc\\prometheus\\prometheus.yml prom/prometheus"
+                    bat "docker run -d -p 9090:9090 -v ${PROMETHEUS_CONFIG_PATH.replaceAll('\\\\', '\\\\\\\\')}:C:/etc/prometheus/prometheus.yml prom/prometheus"
+
                 }
             }
         }

@@ -54,7 +54,7 @@ pipeline {
                     }
 
                     echo 'Running Prometheus Container with updated config...'
-                    bat "docker run -d --name %PROMETHEUS_CONTAINER% -p %PROMETHEUS_PORT%:9090 -v %PROMETHEUS_CONFIG_PATH%:/etc/prometheus/prometheus.yml prom/prometheus"
+                    bat 'docker run -d --name prometheus -p 9090:9090 -v "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\IBM_Project\\IBMProject\\prometheus.yml:/etc/prometheus/prometheus.yml" prom/prometheus'
                 }
             }
         }

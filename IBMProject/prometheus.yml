@@ -8,4 +8,4 @@ scrape_configs:
 
   - job_name: "flask_app"
     static_configs:
-      - targets: ["my_container:8081"]  # Flask app running inside Docker
+      - targets: ["172.17.0.2:8081"]  # Flask app running inside Docker

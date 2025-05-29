@@ -9,7 +9,7 @@ pipeline {
         SLACK_COLOR_FAILURE = 'danger'
 
         // Change this to your actual Docker Hub repo path
-        DOCKER_IMAGE = 'yourdockerhubusername/myapp:latest'
+        DOCKER_IMAGE = 'dharshangk/myapp:latest'
 
         CONTAINER_NAME = 'my_container'
         HOST_PORT = '8081'

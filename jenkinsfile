@@ -36,11 +36,11 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                echo 'Logging in to Docker Hub...'
-                bat """
-                echo ${env.DOCKER_PASS} | docker login -u ${env.DOCKER_USER} --password-stdin
-                docker push ${env.DOCKER_IMAGE}
-                """
+                    echo 'Logging in to Docker Hub...'
+                    bat """
+                        echo %env.DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                        docker push %env.DOCKER_IMAGE%
+                    """
                     }
                 }
             }
@@ -87,7 +87,7 @@ pipeline {
                 )
                 try {
                     jiraAddComment idOrKey: env.JIRA_ISSUE, comment: "✅ Build Successful! Build ID: ${env.BUILD_NUMBER}"
-                    jiraTransitionIssue idOrKey: env.JIRA_ISSUE, input: [transition: [name: 'Done']]
+                    jiraTransitionIssue idOrKey: env.JIRA_ISSUE, input: [transition: [id: '31']]
                     echo "✅ JIRA Issue ${env.JIRA_ISSUE} updated successfully!"
                 } catch (Exception e) {
                     echo "❌ JIRA update failed: ${e.getMessage()}"
